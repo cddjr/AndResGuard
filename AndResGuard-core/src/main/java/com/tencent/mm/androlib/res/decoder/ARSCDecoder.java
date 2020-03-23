@@ -43,6 +43,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.logging.Logger;
@@ -1115,6 +1117,8 @@ public class ARSCDecoder {
      */
     private HashSet<String> mFileNameBlackList;
 
+    private Random mRnd;
+
     public ResguardStringBuilder() {
       mFileNameBlackList = new HashSet<>();
       mFileNameBlackList.add("con");
@@ -1124,7 +1128,21 @@ public class ARSCDecoder {
       mReplaceStringBuffer = new ArrayList<>();
       mIsReplaced = new HashSet<>();
       mIsWhiteList = new HashSet<>();
-    }
+
+      long seed = System.nanoTime();
+      try {
+        String fixedResName = ARSCDecoder.this.mApkDecoder.getConfig().mFixedResName;
+        if (fixedResName != null && !fixedResName.isEmpty()) {
+          MessageDigest digest;
+          digest = MessageDigest.getInstance("MD5");
+          digest.update(fixedResName.getBytes(StandardCharsets.UTF_8));
+          seed = new BigInteger(digest.digest()).longValue();
+        }
+      } catch (Exception ignored) {
+
+      }
+      mRnd = new Random(seed);
+  }
 
     public void reset(HashSet<Pattern> blacklistPatterns) {
       mReplaceStringBuffer.clear();
@@ -1132,8 +1150,8 @@ public class ARSCDecoder {
       mIsWhiteList.clear();
 
       //TODO: 外部指定字典，逻辑可参考ProGuard
-      Collections.shuffle(mAToZ);
-      Collections.shuffle(mAToAll);
+      Collections.shuffle(mAToZ, mRnd);
+      Collections.shuffle(mAToAll, mRnd);
 
       for (String str: mAToZ) {
         if (!Utils.match(str, blacklistPatterns)) {
