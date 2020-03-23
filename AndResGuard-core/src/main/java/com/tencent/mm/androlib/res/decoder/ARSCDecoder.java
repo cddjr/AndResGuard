@@ -44,15 +44,7 @@ import java.io.InputStream;
 import java.io.Writer;
 import java.math.BigInteger;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -1107,14 +1099,14 @@ public class ARSCDecoder {
     private final List<String> mReplaceStringBuffer;
     private final Set<Integer> mIsReplaced;
     private final Set<Integer> mIsWhiteList;
-    private String[] mAToZ = {
+    private List<String> mAToZ = Arrays.asList(
        "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v",
        "w", "x", "y", "z"
-    };
-    private String[] mAToAll = {
+    );
+    private List<String> mAToAll = Arrays.asList(
        "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "_", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k",
        "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
-    };
+    );
     /**
      * 在window上面有些关键字是不能作为文件名的
      * CON, PRN, AUX, CLOCK$, NUL
@@ -1139,29 +1131,28 @@ public class ARSCDecoder {
       mIsReplaced.clear();
       mIsWhiteList.clear();
 
-      for (int i = 0; i < mAToZ.length; i++) {
-        String str = mAToZ[i];
+      //TODO: 外部指定字典，逻辑可参考ProGuard
+      Collections.shuffle(mAToZ);
+      Collections.shuffle(mAToAll);
+
+      for (String str: mAToZ) {
         if (!Utils.match(str, blacklistPatterns)) {
           mReplaceStringBuffer.add(str);
         }
       }
 
-      for (int i = 0; i < mAToZ.length; i++) {
-        String first = mAToZ[i];
-        for (int j = 0; j < mAToAll.length; j++) {
-          String str = first + mAToAll[j];
+      for (String first: mAToZ) {
+        for (String second: mAToAll) {
+          String str = first + second;
           if (!Utils.match(str, blacklistPatterns)) {
             mReplaceStringBuffer.add(str);
           }
         }
       }
 
-      for (int i = 0; i < mAToZ.length; i++) {
-        String first = mAToZ[i];
-        for (int j = 0; j < mAToAll.length; j++) {
-          String second = mAToAll[j];
-          for (int k = 0; k < mAToAll.length; k++) {
-            String third = mAToAll[k];
+      for (String first: mAToZ) {
+        for (String second:mAToAll) {
+          for (String third:mAToAll) {
             String str = first + second + third;
             if (!mFileNameBlackList.contains(str) && !Utils.match(str, blacklistPatterns)) {
               mReplaceStringBuffer.add(str);
